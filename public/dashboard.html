@@ -30,6 +30,7 @@
             overflow-y: auto;
             position: fixed;
             height: 100vh;
+            z-index: 100;
         }
 
         .logo {
@@ -77,6 +78,16 @@
             font-weight: 600;
         }
 
+        .nav-section {
+            margin-bottom: 15px;
+            font-size: 11px;
+            opacity: 0.6;
+            text-transform: uppercase;
+            padding-left: 15px;
+            margin-top: 20px;
+            font-weight: 600;
+        }
+
         .logout-btn {
             width: 100%;
             padding: 10px;
@@ -97,6 +108,7 @@
             margin-left: 250px;
             flex: 1;
             padding: 30px;
+            overflow-y: auto;
         }
 
         .header {
@@ -246,6 +258,7 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
             animation: slideIn 0.3s ease;
             max-width: 300px;
+            z-index: 1000;
         }
 
         .notification.success {
@@ -261,35 +274,153 @@
             to { transform: translateX(0); opacity: 1; }
         }
 
-        .loading {
+        .achievement-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
             text-align: center;
-            padding: 40px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .achievement-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(102,126,234,0.3);
+        }
+
+        .achievement-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .achievement-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .achievement-desc {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .friend-card {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border-left: 4px solid #667eea;
+        }
+
+        .friend-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .friend-meta {
+            font-size: 12px;
             color: #999;
+            margin-bottom: 5px;
+        }
+
+        .friend-status {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .friend-status.online {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .friend-status.offline {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        .note-card {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .note-author {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .note-content {
+            color: #555;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .note-meta {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .chat-item {
+            padding: 10px;
+            margin-bottom: 8px;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+
+        .chat-item:hover {
+            background: #f5f7fa;
+            border-color: #667eea;
+        }
+
+        .chat-item.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .chat-name {
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .chat-preview {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-top: 3px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 12px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            max-width: 80%;
+        }
+
+        .message.mine {
+            margin-left: auto;
+            background: #667eea;
+            color: white;
         }
 
         @media (max-width: 768px) {
             .sidebar {
                 width: 200px;
-                padding: 20px;
             }
             .main {
                 margin-left: 200px;
                 padding: 15px;
-            }
-            .header h1 {
-                font-size: 20px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .sidebar {
-                position: fixed;
-                left: -200px;
-                transition: all 0.3s ease;
-                z-index: 1000;
-            }
-            .main {
-                margin-left: 0;
             }
         }
     </style>
@@ -310,6 +441,13 @@
                 <div class="nav-item" onclick="switchTab('activities')">📍 Activities</div>
                 <div class="nav-item" onclick="switchTab('goals')">🎯 Goals</div>
                 <div class="nav-item" onclick="switchTab('reports')">📈 Reports</div>
+                <div class="nav-item" onclick="switchTab('achievements')">⭐ Achievements</div>
+                
+                <div class="nav-section">Community</div>
+                <div class="nav-item" onclick="switchTab('chat')">💬 Chat</div>
+                <div class="nav-item" onclick="switchTab('friends')">👥 Friends</div>
+                <div class="nav-item" onclick="switchTab('notes')">📝 Notes</div>
+                <div class="nav-item" onclick="switchTab('share')">🔗 Share</div>
             </nav>
 
             <button class="logout-btn" onclick="logout()">🚪 Logout</button>
@@ -318,10 +456,10 @@
         <!-- Main Content -->
         <div class="main">
             <div class="header">
-                <h1 id="pageTitle">Dashboard</h1>
+                <h1 id="pageTitle">📊 Dashboard</h1>
             </div>
 
-            <!-- Dashboard Section -->
+            <!-- Dashboard -->
             <div id="dashboard" class="section active">
                 <div class="stats-grid">
                     <div class="stat-card">
@@ -329,20 +467,20 @@
                         <div class="value" id="weeklyHours">0h</div>
                     </div>
                     <div class="stat-card">
-                        <h3>Total Activities</h3>
+                        <h3>Activities</h3>
                         <div class="value" id="totalActivities">0</div>
                     </div>
                     <div class="stat-card">
-                        <h3>Active Goals</h3>
+                        <h3>Goals</h3>
                         <div class="value" id="activeGoals">0</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Activities Section -->
+            <!-- Activities -->
             <div id="activities" class="section">
                 <div class="activity-form">
-                    <h3 style="margin-bottom: 15px;">📝 Log New Activity</h3>
+                    <h3 style="margin-bottom: 15px;">📝 Log Activity</h3>
                     <form onsubmit="addActivity(event)">
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                             <div class="form-group">
@@ -371,22 +509,21 @@
                                 </select>
                             </div>
                         </div>
-                        <button type="submit">✅ Save Activity</button>
+                        <button type="submit">✅ Save</button>
                     </form>
                 </div>
-
                 <h3 style="margin-bottom: 15px;">📋 Your Activities</h3>
-                <div id="activitiesList" class="loading">Loading...</div>
+                <div id="activitiesList"></div>
             </div>
 
-            <!-- Goals Section -->
+            <!-- Goals -->
             <div id="goals" class="section">
                 <div class="goal-form">
-                    <h3 style="margin-bottom: 15px;">🎯 Create New Goal</h3>
+                    <h3 style="margin-bottom: 15px;">🎯 Create Goal</h3>
                     <form onsubmit="addGoal(event)">
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                             <div class="form-group" style="grid-column: 1/-1;">
-                                <label>Goal Title</label>
+                                <label>Title</label>
                                 <input type="text" id="goalTitle" placeholder="e.g., Complete Python Course" required>
                             </div>
                             <div class="form-group">
@@ -406,19 +543,127 @@
                                 <input type="date" id="goalDeadline" required>
                             </div>
                         </div>
-                        <button type="submit">✨ Create Goal</button>
+                        <button type="submit">✨ Create</button>
                     </form>
                 </div>
-
                 <h3 style="margin-bottom: 15px;">🎯 Your Goals</h3>
-                <div id="goalsList" class="loading">Loading...</div>
+                <div id="goalsList"></div>
             </div>
 
-            <!-- Reports Section -->
+            <!-- Reports -->
             <div id="reports" class="section">
                 <div class="chart-container">
                     <canvas id="reportsChart"></canvas>
                 </div>
+            </div>
+
+            <!-- Achievements -->
+            <div id="achievements" class="section">
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px;">
+                    <div class="achievement-card">
+                        <div class="achievement-icon">👣</div>
+                        <div class="achievement-name">First Step</div>
+                        <div class="achievement-desc">Log activity</div>
+                    </div>
+                    <div class="achievement-card">
+                        <div class="achievement-icon">⏰</div>
+                        <div class="achievement-name">Hour Master</div>
+                        <div class="achievement-desc">50 hours</div>
+                    </div>
+                    <div class="achievement-card">
+                        <div class="achievement-icon">⚔️</div>
+                        <div class="achievement-name">Week Warrior</div>
+                        <div class="achievement-desc">5 day streak</div>
+                    </div>
+                    <div class="achievement-card">
+                        <div class="achievement-icon">🎯</div>
+                        <div class="achievement-name">Goal Getter</div>
+                        <div class="achievement-desc">Complete goal</div>
+                    </div>
+                    <div class="achievement-card">
+                        <div class="achievement-icon">🦋</div>
+                        <div class="achievement-name">Social Butterfly</div>
+                        <div class="achievement-desc">5 friends</div>
+                    </div>
+                    <div class="achievement-card">
+                        <div class="achievement-icon">💯</div>
+                        <div class="achievement-name">Perfect Score</div>
+                        <div class="achievement-desc">100% focus</div>
+                    </div>
+                    <div class="achievement-card">
+                        <div class="achievement-icon">👑</div>
+                        <div class="achievement-name">Consistency</div>
+                        <div class="achievement-desc">30 day streak</div>
+                    </div>
+                    <div class="achievement-card">
+                        <div class="achievement-icon">⭐</div>
+                        <div class="achievement-name">Community Star</div>
+                        <div class="achievement-desc">50 shares</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat -->
+            <div id="chat" class="section">
+                <div style="display: grid; grid-template-columns: 250px 1fr; gap: 15px; height: calc(100vh - 200px);">
+                    <div style="background: white; border-radius: 12px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow-y: auto;">
+                        <h3 style="margin-bottom: 15px;">Chats</h3>
+                        <div id="chatsList"></div>
+                    </div>
+                    
+                    <div style="background: white; border-radius: 12px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; flex-direction: column;">
+                        <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
+                            <h3 id="chatName">Select a chat</h3>
+                        </div>
+                        <div id="messagesPanel" style="flex: 1; overflow-y: auto; margin-bottom: 15px; padding-right: 10px;">
+                            <p style="text-align: center; color: #999;">Select a chat</p>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="messageInput" placeholder="Type message..." style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                            <button onclick="sendMessage()" style="padding: 10px 20px;">Send</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Friends -->
+            <div id="friends" class="section">
+                <div id="friendsList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px;"></div>
+            </div>
+
+            <!-- Notes -->
+            <div id="notes" class="section">
+                <div id="notesList"></div>
+            </div>
+
+            <!-- Share -->
+            <div id="share" class="section">
+                <div class="activity-form">
+                    <h3 style="margin-bottom: 15px;">🔗 Share Activity</h3>
+                    <form onsubmit="shareActivity(event)">
+                        <div class="form-group">
+                            <label>Select Activity</label>
+                            <select id="shareActivitySelect" required>
+                                <option value="">Choose...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Message (Optional)</label>
+                            <textarea id="shareMessage" placeholder="Add message..." style="height: 80px;"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Share With</label>
+                            <select id="shareTarget" required>
+                                <option value="friends">👥 Friends</option>
+                                <option value="public">🌍 Public</option>
+                                <option value="story">📖 Story</option>
+                            </select>
+                        </div>
+                        <button type="submit">🚀 Share</button>
+                    </form>
+                </div>
+                <h3 style="margin-top: 30px; margin-bottom: 20px;">📤 Your Shares</h3>
+                <div id="sharesList"></div>
             </div>
         </div>
     </div>
@@ -429,8 +674,10 @@
         let currentUser = null;
         let activitiesData = [];
         let goalsData = [];
+        let currentChat = null;
+        let userMessages = {};
+        let sharesData = [];
 
-        // Initialize on page load
         window.addEventListener('load', () => {
             authToken = localStorage.getItem('token');
             if (!authToken) {
@@ -440,9 +687,11 @@
             loadCurrentUser();
             loadActivities();
             loadGoals();
+            loadChats();
+            loadFriends();
+            loadNotes();
         });
 
-        // Load current user info
         async function loadCurrentUser() {
             try {
                 const response = await fetch(`${API_BASE}/api/auth/me`, {
@@ -452,8 +701,6 @@
                     currentUser = await response.json();
                     document.getElementById('userName').textContent = currentUser.fullName || currentUser.username;
                     document.getElementById('userEmail').textContent = currentUser.email;
-                } else {
-                    throw new Error('Failed to load user');
                 }
             } catch (error) {
                 console.error('Error:', error);
@@ -461,7 +708,162 @@
             }
         }
 
-        // Load activities
+        // Chat
+        function loadChats() {
+            const chats = [
+                { id: 1, name: 'Priya Singh', lastMessage: 'How was the study session?', time: '5 min ago' },
+                { id: 2, name: 'Study Group', lastMessage: 'Meeting tomorrow', time: '1 hour ago' },
+                { id: 3, name: 'Raj Patel', lastMessage: 'Check the resources', time: '2 hours ago' }
+            ];
+
+            userMessages[1] = userMessages[1] || [
+                { sender: 'Priya Singh', message: 'How was the study session?', time: '5 min ago', isMine: false },
+                { sender: 'You', message: 'Great! Finished 2 chapters', time: '4 min ago', isMine: true }
+            ];
+            userMessages[2] = userMessages[2] || [
+                { sender: 'Study Group', message: 'Everyone ready?', time: '1 hour ago', isMine: false }
+            ];
+            userMessages[3] = userMessages[3] || [
+                { sender: 'Raj Patel', message: 'Check resources', time: '2 hours ago', isMine: false }
+            ];
+
+            const chatsList = document.getElementById('chatsList');
+            chatsList.innerHTML = chats.map(chat => `
+                <div class="chat-item ${currentChat === chat.id ? 'active' : ''}" onclick="openChat(${chat.id}, '${chat.name}')">
+                    <div class="chat-name">${chat.name}</div>
+                    <div class="chat-preview">${chat.lastMessage.substring(0, 20)}...</div>
+                </div>
+            `).join('');
+        }
+
+        function openChat(chatId, chatName) {
+            currentChat = chatId;
+            document.getElementById('chatName').textContent = chatName;
+            loadChatMessages(chatId);
+            document.querySelectorAll('.chat-item').forEach(item => item.classList.remove('active'));
+            event.target.closest('.chat-item').classList.add('active');
+        }
+
+        function loadChatMessages(chatId) {
+            const messages = userMessages[chatId] || [];
+            const panel = document.getElementById('messagesPanel');
+            panel.innerHTML = messages.map(msg => `
+                <div class="message ${msg.isMine ? 'mine' : ''}">
+                    <strong>${msg.sender}</strong><br>
+                    ${msg.message}
+                    <div style="font-size: 11px; opacity: 0.7; margin-top: 3px;">${msg.time}</div>
+                </div>
+            `).join('');
+            panel.scrollTop = panel.scrollHeight;
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            if (message && currentChat) {
+                if (!userMessages[currentChat]) userMessages[currentChat] = [];
+                userMessages[currentChat].push({
+                    sender: 'You',
+                    message: message,
+                    time: new Date().toLocaleTimeString(),
+                    isMine: true
+                });
+                input.value = '';
+                loadChatMessages(currentChat);
+                showNotification('✅ Message sent!', 'success');
+            }
+        }
+
+        // Friends
+        function loadFriends() {
+            const friends = [
+                { id: 1, name: 'Priya Singh', icon: '🎨', status: 'online', hours: 18 },
+                { id: 2, name: 'Raj Patel', icon: '💻', status: 'online', hours: 20 },
+                { id: 3, name: 'Maya Sharma', icon: '📚', status: 'offline', hours: 15 },
+                { id: 4, name: 'Aman Kumar', icon: '🏃', status: 'online', hours: 12 }
+            ];
+
+            const friendsList = document.getElementById('friendsList');
+            friendsList.innerHTML = friends.map(friend => `
+                <div class="friend-card">
+                    <div style="font-size: 24px; margin-bottom: 10px;">${friend.icon}</div>
+                    <div class="friend-name">${friend.name}</div>
+                    <div class="friend-meta">This week: ${friend.hours}h</div>
+                    <span class="friend-status ${friend.status}">${friend.status.toUpperCase()}</span>
+                </div>
+            `).join('');
+        }
+
+        // Notes
+        function loadNotes() {
+            const notes = [
+                { author: 'Priya Singh', content: 'Tips for organic chemistry - focus on mechanisms', likes: 15 },
+                { author: 'Raj Patel', content: 'Python lambda functions explained simply', likes: 23 },
+                { author: 'Maya Sharma', content: 'Time management strategies that work', likes: 18 }
+            ];
+
+            const notesList = document.getElementById('notesList');
+            notesList.innerHTML = notes.map(note => `
+                <div class="note-card">
+                    <div class="note-author">${note.author}</div>
+                    <div class="note-content">${note.content}</div>
+                    <div class="note-meta">❤️ ${note.likes} likes</div>
+                </div>
+            `).join('');
+        }
+
+        // Share
+        function shareActivity(event) {
+            event.preventDefault();
+            const activityId = document.getElementById('shareActivitySelect').value;
+            const message = document.getElementById('shareMessage').value;
+            const target = document.getElementById('shareTarget').value;
+
+            if (!activityId) {
+                showNotification('Select an activity', 'error');
+                return;
+            }
+
+            const activity = activitiesData[parseInt(activityId)];
+            if (activity) {
+                sharesData.push({
+                    activity: activity.title,
+                    message: message,
+                    target: target,
+                    date: new Date().toLocaleDateString(),
+                    likes: 0
+                });
+                showNotification('✅ Shared!', 'success');
+                event.target.reset();
+                loadShares();
+                updateShareSelect();
+            }
+        }
+
+        function loadShares() {
+            const sharesList = document.getElementById('sharesList');
+            if (sharesData.length === 0) {
+                sharesList.innerHTML = '<p style="text-align: center; color: #999;">No shares</p>';
+                return;
+            }
+            sharesList.innerHTML = sharesData.map((share) => `
+                <div class="list-item">
+                    <div>
+                        <div class="list-item-title">${share.activity}</div>
+                        <div class="list-item-meta">${share.date} • ${share.target}</div>
+                    </div>
+                    <div style="color: #667eea;">❤️ ${share.likes}</div>
+                </div>
+            `).join('');
+        }
+
+        function updateShareSelect() {
+            const select = document.getElementById('shareActivitySelect');
+            select.innerHTML = '<option value="">Choose...</option>' + 
+                activitiesData.map((a, idx) => `<option value="${idx}">${a.title}</option>`).join('');
+        }
+
+        // Activities
         async function loadActivities() {
             try {
                 const response = await fetch(`${API_BASE}/api/activities`, {
@@ -470,12 +872,13 @@
                 activitiesData = await response.json() || [];
                 renderActivities();
                 updateDashboard();
+                updateShareSelect();
             } catch (error) {
-                console.error('Error:', error);
+                activitiesData = [];
+                renderActivities();
             }
         }
 
-        // Add activity
         async function addActivity(event) {
             event.preventDefault();
             const activity = {
@@ -500,36 +903,31 @@
                     showNotification('✅ Activity saved!', 'success');
                     event.target.reset();
                     loadActivities();
-                } else {
-                    throw new Error('Failed to save activity');
                 }
             } catch (error) {
-                showNotification('❌ Error: ' + error.message, 'error');
+                showNotification('❌ Error', 'error');
             }
         }
 
-        // Render activities list
         function renderActivities() {
             const container = document.getElementById('activitiesList');
             if (activitiesData.length === 0) {
-                container.innerHTML = '<p style="text-align: center; color: #999;">No activities yet</p>';
+                container.innerHTML = '<p style="text-align: center; color: #999;">No activities</p>';
                 return;
             }
             container.innerHTML = activitiesData
                 .sort((a, b) => new Date(b.date) - new Date(a.date))
-                .map(activity => `
+                .map((a) => `
                     <div class="list-item">
                         <div>
-                            <div class="list-item-title">${activity.title}</div>
-                            <div class="list-item-meta">
-                                ${activity.type} • ${activity.duration}h • ${activity.mood}
-                            </div>
+                            <div class="list-item-title">${a.title}</div>
+                            <div class="list-item-meta">${a.type} • ${a.duration}h • ${a.mood}</div>
                         </div>
                     </div>
                 `).join('');
         }
 
-        // Load goals
+        // Goals
         async function loadGoals() {
             try {
                 const response = await fetch(`${API_BASE}/api/goals`, {
@@ -539,11 +937,11 @@
                 renderGoals();
                 updateDashboard();
             } catch (error) {
-                console.error('Error:', error);
+                goalsData = [];
+                renderGoals();
             }
         }
 
-        // Add goal
         async function addGoal(event) {
             event.preventDefault();
             const goal = {
@@ -567,50 +965,41 @@
                     showNotification('✨ Goal created!', 'success');
                     event.target.reset();
                     loadGoals();
-                } else {
-                    throw new Error('Failed to create goal');
                 }
             } catch (error) {
-                showNotification('❌ Error: ' + error.message, 'error');
+                showNotification('❌ Error', 'error');
             }
         }
 
-        // Render goals list
         function renderGoals() {
             const container = document.getElementById('goalsList');
             if (goalsData.length === 0) {
-                container.innerHTML = '<p style="text-align: center; color: #999;">No goals yet</p>';
+                container.innerHTML = '<p style="text-align: center; color: #999;">No goals</p>';
                 return;
             }
             container.innerHTML = goalsData.map(goal => `
                 <div class="list-item">
                     <div style="flex: 1;">
                         <div class="list-item-title">${goal.title}</div>
-                        <div class="list-item-meta">
-                            Target: ${goal.target}h • Deadline: ${goal.deadline}
-                        </div>
+                        <div class="list-item-meta">Target: ${goal.target}h • Deadline: ${goal.deadline}</div>
                         <div style="margin-top: 10px; background: #eee; height: 8px; border-radius: 4px;">
-                            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); height: 100%; width: ${Math.min((goal.current/goal.target)*100, 100)}%; border-radius: 4px;"></div>
+                            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); height: 100%; width: ${Math.min(((goal.current || 0)/goal.target)*100, 100)}%; border-radius: 4px;"></div>
                         </div>
                     </div>
                 </div>
             `).join('');
         }
 
-        // Update dashboard stats
+        // Dashboard
         function updateDashboard() {
-            const weekHours = activitiesData.reduce((sum, act) => sum + act.duration, 0);
-            document.getElementById('weeklyHours').textContent = weekHours + 'h';
+            const hours = activitiesData.reduce((sum, a) => sum + (a.duration || 0), 0);
+            document.getElementById('weeklyHours').textContent = hours.toFixed(1) + 'h';
             document.getElementById('totalActivities').textContent = activitiesData.length;
             document.getElementById('activeGoals').textContent = goalsData.length;
 
-            // Create chart
-            if (activitiesData.length > 0) {
-                createChart();
-            }
+            if (activitiesData.length > 0) createChart();
         }
 
-        // Create reports chart
         function createChart() {
             const canvas = document.getElementById('reportsChart');
             if (!canvas) return;
@@ -619,7 +1008,7 @@
             const hours = types.map(type => 
                 activitiesData
                     .filter(a => a.type === type)
-                    .reduce((sum, a) => sum + a.duration, 0)
+                    .reduce((sum, a) => sum + (a.duration || 0), 0)
             );
 
             if (window.reportsChart) window.reportsChart.destroy();
@@ -638,17 +1027,13 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        y: { beginAtZero: true }
-                    }
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
                 }
             });
         }
 
-        // Switch sections
+        // Navigation
         function switchTab(tab) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.getElementById(tab).classList.add('active');
@@ -660,12 +1045,21 @@
                 dashboard: '📊 Dashboard',
                 activities: '📍 Activities',
                 goals: '🎯 Goals',
-                reports: '📈 Reports'
+                reports: '📈 Reports',
+                achievements: '⭐ Achievements',
+                chat: '💬 Chat',
+                friends: '👥 Friends',
+                notes: '📝 Notes',
+                share: '🔗 Share'
             };
             document.getElementById('pageTitle').textContent = titles[tab];
+
+            if (tab === 'chat') loadChats();
+            if (tab === 'friends') loadFriends();
+            if (tab === 'notes') loadNotes();
+            if (tab === 'share') loadShares();
         }
 
-        // Show notification
         function showNotification(message, type) {
             const notification = document.createElement('div');
             notification.className = `notification ${type}`;
@@ -674,7 +1068,6 @@
             setTimeout(() => notification.remove(), 3000);
         }
 
-        // Logout
         function logout() {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
