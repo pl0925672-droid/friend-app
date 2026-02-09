@@ -824,6 +824,18 @@
     </div>
 
     <script>
+        // API Configuration - Use current domain for dynamic deployment URLs
+        const API_BASE = window.location.origin;
+        const AUTH_TOKEN = localStorage.getItem('authToken') || localStorage.getItem('token');
+        
+        // Redirect to login if no token
+        window.addEventListener('load', () => {
+            if (!AUTH_TOKEN) {
+                window.location.href = '/login.html';
+                return;
+            }
+        });
+        
         // Data Storage
         let userActivities = [];
         let userGoals = [];
@@ -831,14 +843,48 @@
         let userAchievements = [];
         let currentChat = null;
         let userMessages = {};
+        let currentUser = null;
+
+        // API Helper
+        async function apiCall(endpoint, method = 'GET', data = null) {
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': AUTH_TOKEN ? `Bearer ${AUTH_TOKEN}` : ''
+                }
+            };
+
+            if (data) {
+                options.body = JSON.stringify(data);
+            }
+
+            try {
+                const response = await fetch(API_BASE + '/api' + endpoint, options);
+                if (response.status === 401 || response.status === 403) {
+                    localStorage.clear();
+                    window.location.href = '/login.html';
+                    return null;
+                }
+                return await response.json();
+            } catch (error) {
+                console.error('API Error:', error);
+                showNotification('Network error: ' + error.message, 'warning');
+                return null;
+            }
+        }
 
         // Initialize
         document.getElementById('activityScore').addEventListener('input', function() {
             document.getElementById('scoreDisplay').textContent = this.value;
         });
 
-        document.getElementById('goalDeadline').valueAsDate = new Date();
-        document.getElementById('activityDate').valueAsDate = new Date();
+        if (document.getElementById('goalDeadline')) {
+            document.getElementById('goalDeadline').valueAsDate = new Date();
+        }
+        if (document.getElementById('activityDate')) {
+            document.getElementById('activityDate').valueAsDate = new Date();
+        }
 
         // Achievements Definition
         const allAchievements = [
@@ -968,7 +1014,7 @@
         }
 
         // Save Activity
-        function saveActivity(event) {
+        async function saveActivity(event) {
             event.preventDefault();
             
             const activity = {
@@ -977,27 +1023,30 @@
                 duration: parseInt(document.getElementById('activityDuration').value),
                 mood: document.getElementById('activityMood').value,
                 score: parseInt(document.getElementById('activityScore').value),
-                date: new Date().toLocaleDateString(),
-                timestamp: Date.now()
             };
 
-            userActivities.push(activity);
-            loadActivities();
-            updateDashboard();
-            
-            closeModal('addActivityModal');
-            showNotification(`${activity.title} added! 🎉`, 'success');
-            
-            document.getElementById('activityType').value = 'study';
-            document.getElementById('activityTitle').value = '';
-            document.getElementById('activityDuration').value = '';
-            document.getElementById('activityMood').value = '😊';
-            document.getElementById('activityScore').value = '5';
-            document.getElementById('scoreDisplay').textContent = '5';
+            const result = await apiCall('/activities', 'POST', activity);
+            if (result) {
+                userActivities.push(activity);
+                loadActivities();
+                updateDashboard();
+                
+                closeModal('addActivityModal');
+                showNotification(`${activity.title} added! 🎉`, 'success');
+                
+                document.getElementById('activityType').value = 'study';
+                document.getElementById('activityTitle').value = '';
+                document.getElementById('activityDuration').value = '';
+                document.getElementById('activityMood').value = '😊';
+                document.getElementById('activityScore').value = '5';
+                document.getElementById('scoreDisplay').textContent = '5';
+            } else {
+                showNotification('Failed to add activity', 'warning');
+            }
         }
 
         // Save Goal
-        function saveGoal(event) {
+        async function saveGoal(event) {
             event.preventDefault();
             
             const goal = {
@@ -1005,23 +1054,26 @@
                 description: document.getElementById('goalDescription').value,
                 category: document.getElementById('goalCategory').value,
                 target: parseInt(document.getElementById('goalTarget').value),
-                current: 0,
                 deadline: document.getElementById('goalDeadline').value,
-                created: new Date().toLocaleDateString()
             };
 
-            userGoals.push(goal);
-            loadGoals();
-            updateDashboard();
-            
-            closeModal('addGoalModal');
-            showNotification(`Goal "${goal.title}" created! 🎯`, 'success');
+            const result = await apiCall('/goals', 'POST', goal);
+            if (result) {
+                userGoals.push(goal);
+                loadGoals();
+                updateDashboard();
+                
+                closeModal('addGoalModal');
+                showNotification(`Goal "${goal.title}" created! 🎯`, 'success');
 
-            document.getElementById('goalTitle').value = '';
-            document.getElementById('goalDescription').value = '';
-            document.getElementById('goalCategory').value = 'study';
-            document.getElementById('goalTarget').value = '';
-            document.getElementById('goalDeadline').value = '';
+                document.getElementById('goalTitle').value = '';
+                document.getElementById('goalDescription').value = '';
+                document.getElementById('goalCategory').value = 'study';
+                document.getElementById('goalTarget').value = '';
+                document.getElementById('goalDeadline').value = '';
+            } else {
+                showNotification('Failed to create goal', 'warning');
+            }
         }
 
         // Share Activity
@@ -1047,14 +1099,19 @@
         }
 
         // Load Functions
-        function loadActivities() {
+        async function loadActivities() {
+            const data = await apiCall('/activities', 'GET');
+            if (data && data.activities) {
+                userActivities = data.activities;
+            }
+            
             const html = userActivities.map(a => `
                 <div class="card">
                     <div class="card-title">${a.title}</div>
-                    <div class="card-meta">${a.duration} mins • ${a.date} ${a.mood}</div>
+                    <div class="card-meta">${a.duration} mins • ${a.date || new Date().toLocaleDateString()} ${a.mood || ''}</div>
                     <div class="card-meta">Score: ${a.score}/10</div>
                     <div class="card-actions">
-                        <button class="action-btn" onclick="deleteActivity('${a.timestamp}')">🗑️ Delete</button>
+                        <button class="action-btn" onclick="deleteActivity('${a.id || a.timestamp}')">🗑️ Delete</button>
                         <button class="action-btn" onclick="openShareModal()">📤 Share</button>
                     </div>
                 </div>
@@ -1066,16 +1123,21 @@
             }
         }
 
-        function loadGoals() {
-            const html = userGoals.map((g, i) => {
-                const progress = (g.current / g.target) * 100;
+        async function loadGoals() {
+            const data = await apiCall('/goals', 'GET');
+            if (data && data.goals) {
+                userGoals = data.goals;
+            }
+            
+            const html = userGoals.map((g) => {
+                const progress = (g.current || 0 / g.target) * 100;
                 return `
                     <div class="goal-item">
                         <div class="goal-title">${g.title}</div>
                         <div class="progress-bar">
                             <div class="progress-fill" style="width: ${progress}%"></div>
                         </div>
-                        <div class="goal-meta">${g.current}/${g.target} hours • ${g.category}</div>
+                        <div class="goal-meta">${g.current || 0}/${g.target} hours • ${g.category}</div>
                     </div>
                 `;
             }).join('');

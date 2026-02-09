@@ -353,7 +353,8 @@
     </div>
 
     <script>
-        const API_BASE = 'http://localhost:3000';
+        // Use current domain instead of hardcoded localhost
+        const API_BASE = window.location.origin;
 
         function switchTab(tab) {
             document.getElementById('loginForm').classList.toggle('hidden', tab !== 'login');
