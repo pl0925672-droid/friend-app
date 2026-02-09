@@ -1,0 +1,129 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: friend_postgres
+    environment:
+      POSTGRES_USER: frienduser
+      POSTGRES_PASSWORD: friendpass123
+      POSTGRES_DB: friend_db
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database_schema/init-db.sql:/docker-entrypoint-initdb.d/01-init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U frienduser"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - friend_network
+    restart: unless-stopped
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: friend_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - friend_network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+  # Node.js API Backend
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: friend_api
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DATABASE_URL: postgres://frienduser:friendpass123@postgres:5432/friend_db
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USERNAME: frienduser
+      DATABASE_PASSWORD: friendpass123
+      DATABASE_NAME: friend_db
+      REDIS_URL: redis://redis:6379
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET:-your_jwt_secret_here_change_in_production}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-your_refresh_secret_here_change_in_production}
+      JWT_EXPIRATION: 24h
+      JWT_REFRESH_EXPIRATION: 7d
+      BCRYPT_ROUNDS: 12
+      LOG_LEVEL: debug
+      CORS_ORIGIN: http://localhost:3001,http://localhost:8080,http://localhost:19006
+      FILE_UPLOAD_LIMIT: 50mb
+      SESSION_TIMEOUT: 1800
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - /app/dist
+    networks:
+      - friend_network
+    command: npm run dev
+    restart: unless-stopped
+
+  # PgAdmin (Database Management UI)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: friend_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@friend.local
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - friend_network
+    restart: unless-stopped
+
+  # Redis Commander (Redis Management UI)
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: friend_redis_commander
+    environment:
+      REDIS_HOSTS: local:redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    networks:
+      - friend_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+
+networks:
+  friend_network:
+    driver: bridge

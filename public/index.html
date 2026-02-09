@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Friend App - Study Social Network</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            min-height: 100vh;
+            background: #f5f7fa;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-section {
+            margin-bottom: 30px;
+        }
+
+        .nav-title {
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            opacity: 0.7;
+            margin-bottom: 10px;
+        }
+
+        .nav-item {
+            padding: 12px 15px;
+            cursor: pointer;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            background: rgba(255,255,255,0.2);
+            transform: translateX(5px);
+        }
+
+        /* Main Content */
+        .main {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow-y: auto;
+        }
+
+        .panel-header {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s;
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            animation: slideUp 0.3s;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .form-actions button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .btn-submit {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-submit:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+
+        .btn-cancel {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-cancel:hover {
+            background: #e0e0e0;
+        }
+
+        .add-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Cards */
+        .card {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 3px solid #667eea;
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transform: translateX(5px);
+        }
+
+        .card-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .card-meta {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 8px;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 6px 10px;
+            font-size: 11px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+            border: 1px solid #ddd;
+        }
+
+        .action-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        /* Charts */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 20px;
+        }
+
+        /* Badges */
+        .badges-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .badge {
+            text-align: center;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .badge.earned {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+        }
+
+        .badge:hover {
+            transform: scale(1.05);
+        }
+
+        .badge-icon {
+            font-size: 32px;
+            margin-bottom: 5px;
+        }
+
+        .badge-name {
+            font-size: 12px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .badge-locked {
+            opacity: 0.3;
+        }
+
+        /* Goals */
+        .goal-item {
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 3px solid #667eea;
+        }
+
+        .goal-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+        }
+
+        .goal-meta {
+            font-size: 12px;
+            color: #999;
+        }
+
+        /* Notifications */
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            animation: slideIn 0.3s ease;
+            border-left: 4px solid #667eea;
+            max-width: 350px;
+        }
+
+        .notification.success {
+            border-left-color: #4caf50;
+        }
+
+        .notification.info {
+            border-left-color: #2196f3;
+        }
+
+        .notification.warning {
+            border-left-color: #ff9800;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Share Modal */
+        .share-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .share-option {
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .share-option:hover {
+            background: #667eea;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .share-option-icon {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .share-option-text {
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        /* Layout for 2-column dashboard */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        .scroll-container {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        @media (max-width: 1200px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                display: none;
+            }
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .tab {
+            padding: 10px 15px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-weight: bold;
+            color: #999;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo">📚 Friend</div>
+            
+            <div class="nav-section">
+                <div class="nav-title">Main</div>
+                <div class="nav-item active" onclick="switchTab('dashboard')">🏠 Dashboard</div>
+                <div class="nav-item" onclick="switchTab('chat')">💬 Chat</div>
+                <div class="nav-item" onclick="switchTab('activities')">📊 Activities</div>
+                <div class="nav-item" onclick="switchTab('goals')">🎯 Goals</div>
+                <div class="nav-item" onclick="switchTab('reports')">📈 Reports</div>
+                <div class="nav-item" onclick="switchTab('achievements')">⭐ Achievements</div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-title">Community</div>
+                <div class="nav-item" onclick="switchTab('share')">👥 Share</div>
+                <div class="nav-item" onclick="switchTab('notes')">📝 Notes</div>
+                <div class="nav-item" onclick="switchTab('friends')">👫 Friends</div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-title">Account</div>
+                <div class="nav-item">⚙️ Settings</div>
+                <div class="nav-item">🚪 Logout</div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main">
+            <!-- Dashboard -->
+            <div id="dashboardSection">
+                <div class="dashboard-grid">
+                    <div class="panel">
+                        <div class="panel-header">📊 This Week's Summary</div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-number" id="weeklyHours">14</div>
+                            <div class="stat-label">Study Hours</div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-number" id="weeklyActivities">12</div>
+                            <div class="stat-label">Activities Logged</div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-number" id="avgScore">8.5</div>
+                            <div class="stat-label">Avg Productivity Score</div>
+                        </div>
+
+                        <button class="add-btn" onclick="openAddActivityModal()">➕ Add Activity</button>
+                        <button class="add-btn" onclick="openAddGoalModal()">🎯 Add Goal</button>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-header">🏆 Your Achievements</div>
+                        <div class="badges-grid" id="achievementsPreview"></div>
+                        <button class="add-btn" onclick="switchTab('achievements')">View All ⭐</button>
+                    </div>
+                </div>
+
+                <div class="panel" style="margin-top: 20px;">
+                    <div class="panel-header">📈 Weekly Activity Chart</div>
+                    <div class="chart-container">
+                        <canvas id="weeklyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Section -->
+            <div id="chatSection" style="display: none;">
+                <div class="panel">
+                    <div class="panel-header">💬 Messages</div>
+                    <div class="dashboard-grid">
+                        <div>
+                            <div class="panel-header" style="margin-top: 0;">Recent Chats</div>
+                            <div class="scroll-container" id="chatsList"></div>
+                        </div>
+                        <div>
+                            <div id="messagesPanel" style="display: none;">
+                                <div class="panel-header" style="margin-top: 0;">Chat with <span id="chatName"></span></div>
+                                <div class="chart-container" style="height: 300px; overflow-y: auto;">
+                                    <div id="messagesList" style="padding: 10px;"></div>
+                                </div>
+                                <div class="message-input" style="margin-top: 10px;">
+                                    <input type="text" id="messageInput" placeholder="Type a message..." style="flex: 1; padding: 10px;">
+                                    <button onclick="sendMessage()" style="padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer;">Send</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activities Section -->
+            <div id="activitiesSection" style="display: none;">
+                <div class="panel">
+                    <div class="panel-header">📊 Your Activities</div>
+                    <button class="add-btn" onclick="openAddActivityModal()">➕ Add Activity</button>
+                    <div class="scroll-container" id="activitiesList"></div>
+                </div>
+            </div>
+
+            <!-- Goals Section -->
+            <div id="goalsSection" style="display: none;">
+                <div class="panel">
+                    <div class="panel-header">🎯 Goals & Milestones</div>
+                    <button class="add-btn" onclick="openAddGoalModal()">➕ Add New Goal</button>
+                    <div class="scroll-container" id="goalsList"></div>
+                </div>
+            </div>
+
+            <!-- Reports Section -->
+            <div id="reportsSection" style="display: none;">
+                <div class="panel">
+                    <div class="panel-header">📈 Weekly & Monthly Reports</div>
+                    
+                    <div class="tabs">
+                        <button class="tab active" onclick="switchReport('weekly')">Weekly</button>
+                        <button class="tab" onclick="switchReport('monthly')">Monthly</button>
+                    </div>
+
+                    <div id="weeklyReport" style="display: block;">
+                        <div class="chart-container">
+                            <canvas id="weeklyReportChart"></canvas>
+                        </div>
+                        <div class="panel-header" style="margin-top: 20px;">Statistics</div>
+                        <div id="weeklyStats"></div>
+                    </div>
+
+                    <div id="monthlyReport" style="display: none;">
+                        <div class="chart-container">
+                            <canvas id="monthlyReportChart"></canvas>
+                        </div>
+                        <div class="panel-header" style="margin-top: 20px;">Statistics</div>
+                        <div id="monthlyStats"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Achievements Section -->
+            <div id="achievementsSection" style="display: none;">
+                <div class="panel">
+                    <div class="panel-header">⭐ Your Achievements & Badges</div>
+                    <div class="badges-grid" id="achievementsList"></div>
+                </div>
+            </div>
+
+            <!-- Share Section -->
+            <div id="shareSection" style="display: none;">
+                <div class="panel">
+                    <div class="panel-header">👥 Share Your Progress</div>
+                    <button class="add-btn" onclick="openShareModal()">📤 Share Activity</button>
+                    
+                    <div class="panel-header" style="margin-top: 20px;">Recent Shares</div>
+                    <div class="scroll-container" id="sharesList"></div>
+                </div>
+            </div>
+
+            <!-- Friends Section -->
+            <div id="friendsSection" style="display: none;">
+                <div class="panel">
+                    <div class="panel-header">� Friends & Community</div>
+                    <div class="scroll-container" id="friendsList"></div>
+                </div>
+            </div>
+
+            <!-- Notes Section -->
+            <div id="notesSection" style="display: none;">
+                <div class="panel">
+                    <div class="panel-header">📝 Shared Notes</div>
+                    <button class="add-btn" onclick="openAddNoteModal()">📝 Add Note</button>
+                    <div class="scroll-container" id="notesList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Activity Modal -->
+    <div id="addActivityModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">📚 Add Activity</div>
+            <form onsubmit="saveActivity(event)">
+                <div class="form-group">
+                    <label for="activityType">Type:</label>
+                    <select id="activityType" required>
+                        <option value="study">📚 Study</option>
+                        <option value="exercise">💪 Exercise</option>
+                        <option value="reading">🤓 Reading</option>
+                        <option value="work">💼 Work</option>
+                        <option value="break">☕ Break</option>
+                        <option value="other">📌 Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="activityTitle">Title:</label>
+                    <input type="text" id="activityTitle" placeholder="e.g., JavaScript Study" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="activityDuration">Duration (minutes):</label>
+                    <input type="number" id="activityDuration" placeholder="e.g., 120" min="1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="activityMood">Mood:</label>
+                    <select id="activityMood">
+                        <option value="😊">😊 Happy</option>
+                        <option value="😌">😌 Calm</option>
+                        <option value="😫">😫 Tired</option>
+                        <option value="🤩">🤩 Excited</option>
+                        <option value="😴">😴 Sleepy</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="activityScore">Productivity Score:</label>
+                    <input type="range" id="activityScore" min="1" max="10" value="5">
+                    <div style="text-align: center; color: #667eea; font-weight: bold;">
+                        <span id="scoreDisplay">5</span>/10
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-submit">✅ Add</button>
+                    <button type="button" class="btn-cancel" onclick="closeModal('addActivityModal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Goal Modal -->
+    <div id="addGoalModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">🎯 Add Goal</div>
+            <form onsubmit="saveGoal(event)">
+                <div class="form-group">
+                    <label for="goalTitle">Goal Title:</label>
+                    <input type="text" id="goalTitle" placeholder="e.g., Complete React Course" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="goalDescription">Description:</label>
+                    <textarea id="goalDescription" placeholder="What's your goal about?"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="goalCategory">Category:</label>
+                    <select id="goalCategory">
+                        <option value="study">📚 Study</option>
+                        <option value="fitness">💪 Fitness</option>
+                        <option value="career">💼 Career</option>
+                        <option value="personal">🌟 Personal</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="goalTarget">Target Hours:</label>
+                    <input type="number" id="goalTarget" placeholder="e.g., 40" min="1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="goalDeadline">Deadline:</label>
+                    <input type="date" id="goalDeadline" required>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-submit">✅ Create Goal</button>
+                    <button type="button" class="btn-cancel" onclick="closeModal('addGoalModal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Share Modal -->
+    <div id="shareModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">📤 Share Your Progress</div>
+            <form onsubmit="shareActivity(event)">
+                <div class="form-group">
+                    <label for="shareActivity">Select Activity:</label>
+                    <select id="shareActivity" required>
+                        <option value="">Choose an activity...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="shareMessage">Message:</label>
+                    <textarea id="shareMessage" placeholder="Add a message..." maxlength="200"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Share With:</label>
+                    <div class="share-options">
+                        <div class="share-option" onclick="selectShare(this, 'friends')">
+                            <div class="share-option-icon">👥</div>
+                            <div class="share-option-text">Friends</div>
+                        </div>
+                        <div class="share-option" onclick="selectShare(this, 'public')">
+                            <div class="share-option-icon">🌐</div>
+                            <div class="share-option-text">Public</div>
+                        </div>
+                        <div class="share-option" onclick="selectShare(this, 'story')">
+                            <div class="share-option-icon">📸</div>
+                            <div class="share-option-text">Story</div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="shareTarget" value="">
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-submit">📤 Share</button>
+                    <button type="button" class="btn-cancel" onclick="closeModal('shareModal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Data Storage
+        let userActivities = [];
+        let userGoals = [];
+        let userShares = [];
+        let userAchievements = [];
+        let currentChat = null;
+        let userMessages = {};
+
+        // Initialize
+        document.getElementById('activityScore').addEventListener('input', function() {
+            document.getElementById('scoreDisplay').textContent = this.value;
+        });
+
+        document.getElementById('goalDeadline').valueAsDate = new Date();
+        document.getElementById('activityDate').valueAsDate = new Date();
+
+        // Achievements Definition
+        const allAchievements = [
+            { id: 1, name: 'First Step', icon: '👣', condition: 'Log your first activity', earned: true },
+            { id: 2, name: 'Hour Master', icon: '⏰', condition: 'Complete 10 hours of study', earned: true },
+            { id: 3, name: 'Week Warrior', icon: '⚔️', condition: 'Stay active for 7 consecutive days', earned: false },
+            { id: 4, name: 'Goal Getter', icon: '🎯', condition: 'Complete 1 goal', earned: false },
+            { id: 5, name: 'Social Butterfly', icon: '🦋', condition: 'Share 5 activities', earned: false },
+            { id: 6, name: 'Perfect Score', icon: '💯', condition: 'Get 10/10 productivity score', earned: false },
+            { id: 7, name: 'Consistency King', icon: '👑', condition: 'Log activities for 30 days', earned: false },
+            { id: 8, name: 'Community Star', icon: '⭐', condition: 'Get 50 likes from community', earned: false },
+        ];
+
+        // Modal Functions
+        function openAddActivityModal() {
+            document.getElementById('addActivityModal').style.display = 'block';
+        }
+
+        function openAddGoalModal() {
+            document.getElementById('addGoalModal').style.display = 'block';
+        }
+
+        function openShareModal() {
+            populateShareActivitySelect();
+            document.getElementById('shareModal').style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Chat Functions
+        function loadChats() {
+            const chats = [
+                { id: 1, name: 'Priya Singh', profilePic: '🎨', lastMessage: 'Project deadline क्या है?', time: '5 min ago', unread: 2 },
+                { id: 2, name: 'Study Group', profilePic: '👥', lastMessage: 'Meeting tomorrow 6 PM', time: '1 hour ago', unread: 0 },
+                { id: 3, name: 'Raj Patel', profilePic: '💻', lastMessage: 'Code review done!', time: '2 hours ago', unread: 0 },
+            ];
+
+            const html = chats.map(chat => `
+                <div class="card" onclick="openChat(${chat.id}, '${chat.name}')">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="font-size: 24px;">${chat.profilePic}</div>
+                        <div style="flex: 1;">
+                            <div class="card-title">${chat.name}</div>
+                            <div class="card-meta">${chat.lastMessage}</div>
+                        </div>
+                        <div style="text-align: right; font-size: 11px;">
+                            ${chat.time}<br/>
+                            ${chat.unread > 0 ? `<span style="background: #667eea; color: white; padding: 2px 6px; border-radius: 10px;">${chat.unread}</span>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            const listElement = document.getElementById('chatsList');
+            if (listElement) {
+                listElement.innerHTML = html;
+            }
+        }
+
+        function openChat(chatId, chatName) {
+            currentChat = chatId;
+            document.getElementById('chatName').textContent = chatName;
+            document.getElementById('messagesPanel').style.display = 'block';
+            
+            if (!userMessages[chatId]) {
+                userMessages[chatId] = [
+                    { sender: 'Priya Singh', message: 'Hi! कैसे हो?', time: '10:30 AM', isMine: false },
+                    { sender: 'You', message: 'बहुत अच्छा! तुम?', time: '10:32 AM', isMine: true },
+                    { sender: 'Priya Singh', message: 'Project deadline क्या है?', time: '10:35 AM', isMine: false },
+                ];
+            }
+            
+            loadChatMessages(chatId);
+        }
+
+        function loadChatMessages(chatId) {
+            const messages = userMessages[chatId] || [];
+            const html = messages.map(m => `
+                <div style="margin-bottom: 10px;">
+                    <div style="font-size: 12px; margin-bottom: 3px; color: #999;">${m.sender} - ${m.time}</div>
+                    <div style="padding: 10px 12px; border-radius: 8px; background: ${m.isMine ? '#667eea' : '#f0f0f0'}; color: ${m.isMine ? 'white' : '#333'}; max-width: 70%;">
+                        ${m.message}
+                    </div>
+                </div>
+            `).join('');
+
+            const listElement = document.getElementById('messagesList');
+            if (listElement) {
+                listElement.innerHTML = html;
+                listElement.scrollTop = listElement.scrollHeight;
+            }
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (message && currentChat) {
+                if (!userMessages[currentChat]) {
+                    userMessages[currentChat] = [];
+                }
+                
+                userMessages[currentChat].push({
+                    sender: 'You',
+                    message: message,
+                    time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+                    isMine: true
+                });
+                
+                input.value = '';
+                loadChatMessages(currentChat);
+                showNotification('Message sent! 📤', 'success');
+            }
+        }
+
+        function openAddNoteModal() {
+            showNotification('Note feature coming soon! 📝', 'info');
+        }
+
+        function selectShare(element, target) {
+            document.querySelectorAll('.share-option').forEach(el => el.style.opacity = '0.5');
+            element.style.opacity = '1';
+            element.style.transform = 'scale(1.1)';
+            document.getElementById('shareTarget').value = target;
+        }
+
+        // Save Activity
+        function saveActivity(event) {
+            event.preventDefault();
+            
+            const activity = {
+                type: document.getElementById('activityType').value,
+                title: document.getElementById('activityTitle').value,
+                duration: parseInt(document.getElementById('activityDuration').value),
+                mood: document.getElementById('activityMood').value,
+                score: parseInt(document.getElementById('activityScore').value),
+                date: new Date().toLocaleDateString(),
+                timestamp: Date.now()
+            };
+
+            userActivities.push(activity);
+            loadActivities();
+            updateDashboard();
+            
+            closeModal('addActivityModal');
+            showNotification(`${activity.title} added! 🎉`, 'success');
+            
+            document.getElementById('activityType').value = 'study';
+            document.getElementById('activityTitle').value = '';
+            document.getElementById('activityDuration').value = '';
+            document.getElementById('activityMood').value = '😊';
+            document.getElementById('activityScore').value = '5';
+            document.getElementById('scoreDisplay').textContent = '5';
+        }
+
+        // Save Goal
+        function saveGoal(event) {
+            event.preventDefault();
+            
+            const goal = {
+                title: document.getElementById('goalTitle').value,
+                description: document.getElementById('goalDescription').value,
+                category: document.getElementById('goalCategory').value,
+                target: parseInt(document.getElementById('goalTarget').value),
+                current: 0,
+                deadline: document.getElementById('goalDeadline').value,
+                created: new Date().toLocaleDateString()
+            };
+
+            userGoals.push(goal);
+            loadGoals();
+            updateDashboard();
+            
+            closeModal('addGoalModal');
+            showNotification(`Goal "${goal.title}" created! 🎯`, 'success');
+
+            document.getElementById('goalTitle').value = '';
+            document.getElementById('goalDescription').value = '';
+            document.getElementById('goalCategory').value = 'study';
+            document.getElementById('goalTarget').value = '';
+            document.getElementById('goalDeadline').value = '';
+        }
+
+        // Share Activity
+        function shareActivity(event) {
+            event.preventDefault();
+            
+            const activityId = document.getElementById('shareActivity').value;
+            const message = document.getElementById('shareMessage').value;
+            const target = document.getElementById('shareTarget').value;
+            
+            const share = {
+                activity: activityId,
+                message: message,
+                target: target,
+                date: new Date().toLocaleDateString(),
+                likes: 0
+            };
+
+            userShares.push(share);
+            loadShares();
+            closeModal('shareModal');
+            showNotification(`Shared with ${target}! 📤`, 'success');
+        }
+
+        // Load Functions
+        function loadActivities() {
+            const html = userActivities.map(a => `
+                <div class="card">
+                    <div class="card-title">${a.title}</div>
+                    <div class="card-meta">${a.duration} mins • ${a.date} ${a.mood}</div>
+                    <div class="card-meta">Score: ${a.score}/10</div>
+                    <div class="card-actions">
+                        <button class="action-btn" onclick="deleteActivity('${a.timestamp}')">🗑️ Delete</button>
+                        <button class="action-btn" onclick="openShareModal()">📤 Share</button>
+                    </div>
+                </div>
+            `).join('');
+            
+            const listElement = document.getElementById('activitiesList');
+            if (listElement) {
+                listElement.innerHTML = html || '<div style="text-align: center; color: #999; padding: 20px;">No activities yet. Add one to get started!</div>';
+            }
+        }
+
+        function loadGoals() {
+            const html = userGoals.map((g, i) => {
+                const progress = (g.current / g.target) * 100;
+                return `
+                    <div class="goal-item">
+                        <div class="goal-title">${g.title}</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${progress}%"></div>
+                        </div>
+                        <div class="goal-meta">${g.current}/${g.target} hours • ${g.category}</div>
+                    </div>
+                `;
+            }).join('');
+
+            const listElement = document.getElementById('goalsList');
+            if (listElement) {
+                listElement.innerHTML = html || '<div style="text-align: center; color: #999; padding: 20px;">No goals yet. Create one to start!</div>';
+            }
+        }
+
+        function loadShares() {
+            const html = userShares.map(s => `
+                <div class="card">
+                    <div class="card-title">Shared with ${s.target}</div>
+                    <div class="card-meta">${s.message || 'No message'} • ${s.date}</div>
+                    <div class="card-meta">❤️ ${s.likes} likes</div>
+                    <div class="card-actions">
+                        <button class="action-btn" onclick="deleteShare('${s.date}')">🗑️ Delete</button>
+                    </div>
+                </div>
+            `).join('');
+
+            const listElement = document.getElementById('sharesList');
+            if (listElement) {
+                listElement.innerHTML = html || '<div style="text-align: center; color: #999; padding: 20px;">No shares yet. Share your activities!</div>';
+            }
+        }
+
+        function loadAchievements() {
+            const html = allAchievements.map(a => `
+                <div class="badge ${a.earned ? 'earned' : 'badge-locked'}">
+                    <div class="badge-icon">${a.icon}</div>
+                    <div class="badge-name">${a.name}</div>
+                    <div style="font-size: 10px; color: #999; margin-top: 5px;">${a.condition}</div>
+                    ${!a.earned ? '<div style="font-size: 10px; margin-top: 5px; color: #999;">Locked</div>' : '<div style="font-size: 10px; margin-top: 5px; color: #667eea; font-weight: bold;">Earned!</div>'}
+                </div>
+            `).join('');
+
+            const div = document.getElementById('achievementsList');
+            if (div) div.innerHTML = html;
+        }
+
+        function loadAchievementsPreview() {
+            const earned = allAchievements.filter(a => a.earned);
+            const html = earned.slice(0, 4).map(a => `
+                <div class="badge earned" title="${a.name}">
+                    <div class="badge-icon">${a.icon}</div>
+                </div>
+            `).join('');
+
+            const div = document.getElementById('achievementsPreview');
+            if (div) div.innerHTML = html;
+        }
+
+        function populateShareActivitySelect() {
+            const select = document.getElementById('shareActivity');
+            const options = userActivities.map((a, i) => `<option value="${i}">${a.title}</option>`).join('');
+            select.innerHTML = '<option value="">Choose an activity...</option>' + options;
+        }
+
+        // Delete Functions
+        function deleteActivity(timestamp) {
+            userActivities = userActivities.filter(a => a.timestamp != timestamp);
+            loadActivities();
+            updateDashboard();
+            showNotification('Activity deleted! 🗑️', 'info');
+        }
+
+        function deleteShare(date) {
+            userShares = userShares.filter(s => s.date != date);
+            loadShares();
+            showNotification('Share deleted! 🗑️', 'info');
+        }
+
+        // Update Dashboard
+        function updateDashboard() {
+            const studyActivities = userActivities.filter(a => a.type === 'study');
+            const totalMinutes = studyActivities.reduce((sum, a) => sum + a.duration, 0);
+            const hours = (totalMinutes / 60).toFixed(1);
+            const avgScore = userActivities.length > 0 ? (userActivities.reduce((sum, a) => sum + a.score, 0) / userActivities.length).toFixed(1) : '0';
+
+            document.getElementById('weeklyHours').textContent = hours;
+            document.getElementById('weeklyActivities').textContent = userActivities.length;
+            document.getElementById('avgScore').textContent = avgScore;
+
+            loadAchievementsPreview();
+            createCharts();
+        }
+
+        // Charts
+        function createCharts() {
+            const ctx = document.getElementById('weeklyChart');
+            if (ctx && ctx.chart) {
+                ctx.chart.destroy();
+            }
+
+            if (ctx) {
+                ctx.chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                        datasets: [{
+                            label: 'Study Hours',
+                            data: [2, 2.5, 3, 2, 2.5, 1.5, 1],
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: true } }
+                    }
+                });
+            }
+        }
+
+        // Switch Section
+        function switchTab(tab) {
+            document.querySelectorAll('[id$="Section"]').forEach(el => el.style.display = 'none');
+            document.getElementById(tab + 'Section').style.display = 'block';
+
+            if (tab === 'chat') loadChats();
+            if (tab === 'activities') loadActivities();
+            if (tab === 'goals') loadGoals();
+            if (tab === 'achievements') loadAchievements();
+            if (tab === 'share') loadShares();
+            if (tab === 'reports') createReportCharts();
+            if (tab === 'friends') loadFriends();
+            if (tab === 'notes') loadNotes();
+        }
+
+        function loadFriends() {
+            const friends = [
+                { id: 1, name: 'Priya Singh', status: 'online', profilePic: '🎨', studyHours: 18 },
+                { id: 2, name: 'Raj Patel', status: 'offline', profilePic: '💻', studyHours: 20 },
+                { id: 3, name: 'Maya Verma', status: 'online', profilePic: '📚', studyHours: 15 },
+                { id: 4, name: 'Aman Singh', status: 'online', profilePic: '🏃', studyHours: 12 },
+            ];
+
+            const html = friends.map(f => `
+                <div class="card">
+                    <div style="display: flex; align-items: center; gap: 10px; justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="font-size: 24px;">${f.profilePic}</div>
+                            <div>
+                                <div class="card-title">${f.name}</div>
+                                <div class="card-meta">${f.status === 'online' ? '🟢 Online' : '⚫ Offline'}</div>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-weight: bold; color: #667eea;">${f.studyHours}h</div>
+                            <div style="font-size: 11px; color: #999;">this week</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            const listElement = document.getElementById('friendsList');
+            if (listElement) {
+                listElement.innerHTML = html;
+            }
+        }
+
+        function loadNotes() {
+            const notes = [
+                { title: 'JavaScript Tips', content: 'Async/await का सही use करो', author: 'Raj Patel', likes: 24 },
+                { title: 'Study Tips', content: 'रोज 2 घंटे consistent study करो', author: 'Priya Singh', likes: 45 },
+            ];
+
+            const html = notes.map(n => `
+                <div class="card">
+                    <div class="card-title">${n.title}</div>
+                    <div class="card-meta">${n.content}</div>
+                    <div class="card-meta">By ${n.author}</div>
+                    <div class="card-actions" style="margin-top: 8px;">
+                        <button class="action-btn">❤️ ${n.likes}</button>
+                        <button class="action-btn">💬 Reply</button>
+                        <button class="action-btn">📤 Share</button>
+                    </div>
+                </div>
+            `).join('');
+
+            const listElement = document.getElementById('notesList');
+            if (listElement) {
+                listElement.innerHTML = html;
+            }
+        }
+
+        function switchReport(type) {
+            document.getElementById('weeklyReport').style.display = type === 'weekly' ? 'block' : 'none';
+            document.getElementById('monthlyReport').style.display = type === 'monthly' ? 'block' : 'none';
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        // Report Charts
+        function createReportCharts() {
+            const weeklyCtx = document.getElementById('weeklyReportChart');
+            if (weeklyCtx && weeklyCtx.chart) weeklyCtx.chart.destroy();
+
+            if (weeklyCtx) {
+                weeklyCtx.chart = new Chart(weeklyCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Study', 'Exercise', 'Reading', 'Work'],
+                        datasets: [{
+                            label: 'Hours This Week',
+                            data: [14, 5, 3, 8],
+                            backgroundColor: ['#667eea', '#764ba2', '#f093fb', '#4facfe'],
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: true } }
+                    }
+                });
+            }
+        }
+
+        // Notifications
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideIn 0.3s reverse';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        };
+
+        // Initialize
+        window.addEventListener('load', () => {
+            updateDashboard();
+            loadActivities();
+            loadGoals();
+            loadShares();
+            loadChats();
+            loadFriends();
+            loadNotes();
+            loadAchievementsPreview();
+        });
+    </script>
+</body>
+</html>
