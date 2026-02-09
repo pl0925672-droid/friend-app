@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Friend App</string>
+    <string name="title_activity_main">Friend App</string>
+    <string name="package_name">com.friendapp.study</string>
+    <string name="custom_url_scheme">com.friendapp.study</string>
+</resources>

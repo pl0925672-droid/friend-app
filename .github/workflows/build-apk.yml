@@ -1,0 +1,80 @@
+name: Build & Release APK
+
+on:
+  push:
+    branches: [main]
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    name: Build Android APK
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Capacitor
+        run: npm install --save @capacitor/core @capacitor/cli @capacitor/android
+
+      - name: Build web app
+        run: npm run build 2>/dev/null || echo "No build script, using static files"
+
+      - name: Initialize Capacitor (if not exists)
+        run: |
+          if [ ! -f "capacitor.config.json" ]; then
+            npx cap init friend-app "Study • Connect • Grow" --web-dir public
+          else
+            echo "Capacitor already initialized"
+          fi
+
+      - name: Add Android platform
+        run: npx cap add android || npx cap sync android
+
+      - name: Build APK
+        run: |
+          cd android
+          ./gradlew assembleRelease
+          cd ..
+
+      - name: Upload APK as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: friend-app-apk
+          path: android/app/build/outputs/apk/release/*.apk
+          retention-days: 30
+
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: android/app/build/outputs/apk/release/*.apk
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Notify APK ready
+        run: |
+          echo "✅ APK built successfully!"
+          echo "📱 Check 'Artifacts' tab in Actions for APK download"
+          echo "🔗 Or tag a release: git tag v1.0.0 && git push origin v1.0.0"
